@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  web:
+    container_name: web
+    image: nginx:alpine
+    depends_on:
+      # `app`サービス（コンテナ）が先に起動している必要があるので`depends_on`を指定しておく
+      - app
+    ports:
+      # ポートマッピング： "ホストOSのポート:コンテナ(Nginx)のポート"
+      - "80:80"
+    volumes:
+      # volumeマウント： "ホストOSのパス:コンテナにおけるパス"
+      - ./web/conf.d:/etc/nginx/conf.d
+    networks:
+      - nginx_network
+
+  app:
+    container_name: app
+    image: test_fastapi_app # ビルドされるDockerイメージ名を指定
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    expose:
+      - 8000
+    networks:
+      - nginx_network
+    # ソースコードをリアルタイムに編集したいときは`volumes`でマウントすると便利
+    volumes:
+    - ./app/app:/app/app
+    # appコンテナの`CMD`を上書きするには`command`を使う
+    command: "uvicorn app.main:app --reload --host 0.0.0.0"
+
+networks:
+  nginx_network:
+    driver: bridge
