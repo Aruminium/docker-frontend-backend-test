@@ -11,7 +11,6 @@ services:
     ports:
       # ポートマッピング： "ホストOSのポート:コンテナ(Nginx)のポート"
       - "80:80"
-      - "3001:3000"
     volumes:
       # volumeマウント： "ホストOSのパス:コンテナにおけるパス"
       - ./web/conf.d:/etc/nginx/conf.d
@@ -24,6 +23,8 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
+    restart: always
+    tty: true
     expose:
       - 8000
     networks:
@@ -41,10 +42,10 @@ services:
     volumes:
       - ./next:/usr/src/next
     command: bash -c "npm install && npm run dev"
-    expose:
-      - 3000
-    networks:
-      - nginx_network
+    restart: always
+    tty: true
+    ports:
+      - "3000:3000"
 
 networks:
   nginx_network:
