@@ -7,9 +7,11 @@ services:
     depends_on:
       # `app`サービス（コンテナ）が先に起動している必要があるので`depends_on`を指定しておく
       - app
+      - next
     ports:
       # ポートマッピング： "ホストOSのポート:コンテナ(Nginx)のポート"
       - "80:80"
+      - "3001:3000"
     volumes:
       # volumeマウント： "ホストOSのパス:コンテナにおけるパス"
       - ./web/conf.d:/etc/nginx/conf.d
@@ -31,6 +33,18 @@ services:
     - ./app/app:/app/app
     # appコンテナの`CMD`を上書きするには`command`を使う
     command: "uvicorn app.main:app --reload --host 0.0.0.0"
+
+  next:
+    build:
+      context: ./next
+      dockerfile: Dockerfile
+    volumes:
+      - ./next:/usr/src/next
+    command: bash -c "npm install && npm run dev"
+    expose:
+      - 3000
+    networks:
+      - nginx_network
 
 networks:
   nginx_network:
