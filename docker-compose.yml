@@ -6,6 +6,7 @@ services:
     image: nginx:alpine
     depends_on:
       # `app`サービス（コンテナ）が先に起動している必要があるので`depends_on`を指定しておく
+      - db
       - app
       - next
     ports:
@@ -16,6 +17,8 @@ services:
       - ./web/conf.d:/etc/nginx/conf.d
     networks:
       - nginx_network
+    depends_on:
+      - db
 
   app:
     container_name: app
@@ -26,7 +29,7 @@ services:
     restart: always
     tty: true
     expose:
-      - 8000
+      - 80
     networks:
       - nginx_network
     # ソースコードをリアルタイムに編集したいときは`volumes`でマウントすると便利
@@ -34,6 +37,8 @@ services:
     - ./app/app:/app/app
     # appコンテナの`CMD`を上書きするには`command`を使う
     command: "uvicorn app.main:app --reload --host 0.0.0.0"
+    depends_on:
+      - db
 
   next:
     build:
@@ -41,12 +46,37 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./next:/usr/src/next
+      - node_modules_volume:/usr/src/next/node_modules
     command: bash -c "npm install && npm run dev"
     restart: always
     tty: true
     ports:
       - "3000:3000"
+    networks:
+      - nginx_network
+    depends_on:
+      - db
+      - app
+
+
+  db:
+    build:
+      context: ./db/
+      dockerfile: ./Dockerfile
+    env_file:
+      - ./db/.env
+    ports:
+      - 3306:3306
+    volumes:
+      - ./db/conf.d:/etc/mysql/conf.d
+    restart: always
+    tty: true
+    networks:
+      - nginx_network
 
 networks:
   nginx_network:
     driver: bridge
+
+volumes:
+  node_modules_volume:

@@ -1,10 +1,10 @@
 /**
  * @type {string} userName:
- * @type {Number} age
+ * @type {number} age
  */
-interface FormInput {
+interface FormInput{
   userName: string;
-  age: Number;
+  age: number;
 }
 
 export default FormInput;
